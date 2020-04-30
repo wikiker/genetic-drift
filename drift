@@ -1,0 +1,84 @@
+using Random
+
+if !isfile("v.txt")
+    version = open("v.txt", "w")
+    write(version, Int64(0))
+end
+
+template = open("template.html", "r")
+templateHTML = split(read(template, String), "<!--insert-->")
+close(template)
+
+vfile = open("v.txt", "r")
+v = read(vfile, Int64)
+close(vfile)
+vfile = open("v.txt", "w")
+v += 1
+write(vfile, v)
+close(vfile)
+
+outputPath = "output/output"* string(v) *".html"
+println("\nZapisuju do ", outputPath)
+
+io = open(outputPath, "w")
+
+#Inicializace žetonů
+gen = parse(Int64, input("Vložte počet generací"))
+println()
+pocZet = parse(Int64, input("Vložte počet žetonů"))
+println()
+pocDru = parse(Int8, input("Vložte počet druhů žetonů"))
+println()
+pocZet = (pocZet÷pocDru)*pocDru
+
+zetony = []
+
+for i in 1:pocDru
+    for j in 1:(pocZet/pocDru)
+        append!(zetony, i)
+    end
+end
+
+druhy = ["b", "r", "y", "p", "g"]
+
+println("0. generace:\t", sort!(zetony))
+
+splice!(templateHTML, 2:1, [string(pocZet)])
+
+output = "<div class=\"t\">Generace 0</div>\n"
+for (i, v) in enumerate(zetony)
+    global output
+    output *= "<div class=\"" * druhy[v] * "\"></div>\n"
+end
+
+for i in 1:gen
+    global zetony
+    global output
+    global druhy
+
+    zetony = [zetony; zetony]
+    shuffle!(zetony)
+    zetony = zetony[1:pocZet]
+    println(i, ". generace:\t", sort!(zetony))
+    output *= "<div class=\"t\">Generace " * string(i) *"</div>\n"
+    for (i, v) in enumerate(zetony)
+        output *= "<div class=\"" * druhy[v] * "\"></div>\n"
+    end
+
+    chcibreak = true
+
+    for j in 2:pocZet
+        if zetony[1] != zetony[j]
+            chcibreak = false
+            break
+        end
+    end
+
+    if chcibreak
+        break
+    end
+end
+
+splice!(templateHTML, (lastindex(templateHTML)):(lastindex(templateHTML)-1), [output])
+write(io, templateHTML[1] * templateHTML[2] * templateHTML[3] * templateHTML[4])
+close(io)
